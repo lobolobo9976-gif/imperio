@@ -4,52 +4,54 @@
 
 <h1>🔥 IMPERIO 💀</h1>
 
-👤 {{user}} <br>
-🎯 Nivel: {{level}} | XP: {{xp}} <br>
-📥 Usos: {{use}} / {{limit}} <br>
-📊 Total descargas: {{total}} <br>
-
-{% if vip %}
-💎 VIP ACTIVO <br>
-{% endif %}
+👤 {{user}}<br>
+💰 Coins: {{coins}}<br>
+🎯 Nivel: {{level}} | XP: {{xp}}<br>
 
 <hr>
 
 <form action="/download" method="post">
-<input name="url" placeholder="URL">
 <button>DESCARGAR</button>
 </form>
 
 <hr>
 
-<h3>🎁 Activar código</h3>
-<form action="/activar" method="post">
-<input name="code">
-<button>Activar</button>
-</form>
+<h3>🎯 Misiones diarias</h3>
 
-{% if last_reward %}
-<br>🎉 Código ganado: {{last_reward}}
+{% for m in missions %}
+<div>
+{{m.text}} → +{{m.reward}} coins
+{% if done[loop.index0] == 1 %}
+✅
+{% else %}
+❌
 {% endif %}
-
-<hr>
-
-<h3>📜 Historial</h3>
-{% for h in history %}
-{{h.time}} - {{h.url}}<br>
+</div>
 {% endfor %}
 
 <hr>
 
-<h3>💬 Chat</h3>
-<form action="/chat/test">
-<input name="other" placeholder="usuario">
-<button>Abrir</button>
+<h3>🛒 Tienda</h3>
+
+<form action="/buy" method="post">
+<button>💎 VIP 1 día (50 coins)</button>
+</form>
+
+<a href="https://www.paypal.com/donate/?hosted_button_id=QSA278KTS7XMN">
+<button>💳 Comprar coins</button>
+</a>
+
+<hr>
+
+<h3>⚙️ Admin</h3>
+
+<form action="/give" method="post">
+<input name="user" placeholder="usuario">
+<input name="coins" placeholder="coins">
+<button>Enviar coins</button>
 </form>
 
 <br>
-
-<a href="/admin">ADMIN</a><br>
 <a href="/logout">Salir</a>
 
 </body>

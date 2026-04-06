@@ -1,75 +1,63 @@
-from flask import Flask, request, redirect, render_template, session, url_for
+from flask import Flask, request, redirect, render_template, session
 import os, json, time, random, string
 
 app = Flask(__name__)
-app.secret_key = "imperio_pro"
+app.secret_key = "imperio_dios"
 
 DB = "db.json"
 
-# -------- DB --------
 def load():
     if not os.path.exists(DB):
-        return {"users": {}, "codes": {}, "downloads": 0, "ips": {}, "chats": {}}
+        return {"users": {}, "codes": {}, "downloads": 0}
     return json.load(open(DB))
 
 def save(data):
     json.dump(data, open(DB, "w"), indent=2)
 
-def get_ip():
-    return request.headers.get("x-forwarded-for", request.remote_addr)
+def now_day():
+    return int(time.time() / 86400)
 
-def limit(level):
-    return 5 + level * 2
+# 🎯 misiones random
+def generate_missions():
+    pool = [
+        {"text": "Descarga 1 video", "goal": 1, "reward": 1},
+        {"text": "Descarga 3 videos", "goal": 3, "reward": 2},
+        {"text": "Gana 20 XP", "goal": 20, "reward": 2},
+        {"text": "Usa la web 5 veces", "goal": 5, "reward": 2},
+        {"text": "Sube 1 nivel", "goal": 1, "reward": 3}
+    ]
+    return random.sample(pool, 5)
 
-def now():
-    return int(time.time())
-
-# -------- LOGIN / REGISTER --------
+# LOGIN
 @app.route("/", methods=["GET","POST"])
 def login():
     db = load()
-    ip = get_ip()
 
     if request.method == "POST":
-        u = request.form.get("user","").strip()
-        p = request.form.get("pass","").strip()
-
-        if not u or not p:
-            return "Faltan datos"
-
-        # anti multi cuenta por IP simple
-        if ip in db["ips"] and db["ips"][ip] != u:
-            return "🚫 Solo 1 cuenta por dispositivo"
+        u = request.form["user"]
+        p = request.form["pass"]
 
         if u not in db["users"]:
             db["users"][u] = {
                 "pass": p,
-                "level": 1,
+                "coins": 5,
                 "xp": 0,
+                "level": 1,
                 "use": 0,
-                "last": 0,
-                "strikes": 0,
-                "history": [],
-                "vip_until": 0,
-                "money": 0,
-                "last_reward": ""
+                "missions": [],
+                "done": [],
+                "day": 0,
+                "vip": 0
             }
-            db["ips"][ip] = u
             save(db)
-            session["user"] = u
-            return redirect("/home")
 
         if db["users"][u]["pass"] == p:
             session["user"] = u
-            db["ips"][ip] = u
-            save(db)
             return redirect("/home")
-
-        return "❌ Contraseña incorrecta"
 
     return render_template("login.html")
 
-# -------- HOME --------
+# HOME
 @app.route("/home")
 def home():
     if "user" not in session:
@@ -78,154 +66,85 @@ def home():
     db = load()
     u = db["users"][session["user"]]
 
-    is_vip = u.get("vip_until",0) > now()
+    # 🔁 reset diario
+    if u["day"] != now_day():
+        u["missions"] = generate_missions()
+        u["done"] = [0]*5
+        u["day"] = now_day()
+
+    save(db)
 
     return render_template("index.html",
         user=session["user"],
-        level=u["level"],
+        coins=u["coins"],
         xp=u["xp"],
-        use=u["use"],
-        limit=limit(u["level"]),
-        total=db["downloads"],
-        history=u["history"][-10:][::-1],
-        vip=is_vip,
-        last_reward=u.get("last_reward","")
+        level=u["level"],
+        missions=u["missions"],
+        done=u["done"]
     )
 
-# -------- DESCARGA (ESTABLE / SIMULADA) --------
+# DESCARGA
 @app.route("/download", methods=["POST"])
 def download():
-    if "user" not in session:
-        return redirect("/")
-
     db = load()
     u = db["users"][session["user"]]
-    url = request.form.get("url","").strip()
-    t = now()
 
-    if not url:
-        return "URL vacía"
-
-    # anti spam
-    if t - u["last"] < 2:
-        u["strikes"] += 1
-        save(db)
-        return "⚠️ Espera 2s"
-
-    if u["strikes"] >= 5:
-        return "🚫 Bloqueado por abuso"
-
-    # límite (VIP ignora límite)
-    if u.get("vip_until",0) < t:
-        if u["use"] >= limit(u["level"]):
-            return "❌ Límite alcanzado"
-
-    # sumar stats
     u["use"] += 1
     u["xp"] += 10
-    u["last"] = t
-    db["downloads"] += 1
 
     # subir nivel
     if u["xp"] >= u["level"] * 100:
         u["level"] += 1
         u["xp"] = 0
+        u["coins"] += 2
 
-    # historial
-    u["history"].append({"url": url, "time": time.strftime("%H:%M")})
+    # 🎯 completar misiones
+    for i, m in enumerate(u["missions"]):
+        if u["done"][i] == 1:
+            continue
 
-    # 🎲 sorteo código 1 día (10%)
-    if random.randint(1,10) == 1:
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        db["codes"][code] = "1d"
-        u["last_reward"] = code
+        if "Descarga" in m["text"]:
+            if u["use"] >= m["goal"]:
+                u["coins"] += m["reward"]
+                u["done"][i] = 1
 
-    save(db)
-
-    # aquí no rompemos: redirige a la URL (simula descarga)
-    return redirect(url)
-
-# -------- ACTIVAR CÓDIGO --------
-@app.route("/activar", methods=["POST"])
-def activar():
-    if "user" not in session:
-        return redirect("/")
-
-    db = load()
-    code = request.form.get("code","").strip()
-
-    if code not in db["codes"]:
-        return "Código inválido"
-
-    tipo = db["codes"][code]
-    u = db["users"][session["user"]]
-
-    if tipo == "1d":
-        u["vip_until"] = now() + 86400
-    elif tipo == "30d":
-        u["vip_until"] = now() + 86400*30
-
-    del db["codes"][code]
     save(db)
     return redirect("/home")
 
-# -------- ADMIN --------
-@app.route("/admin")
-def admin():
-    if session.get("user") != "demon":
-        return "No admin"
-
-    return """
-    <h1>💀 ADMIN</h1>
-    <form action="/gen" method="post">
-      <select name="tipo">
-        <option value="1d">1 día</option>
-        <option value="30d">1 mes</option>
-      </select>
-      <button>Generar código</button>
-    </form>
-    <br><a href="/home">Volver</a>
-    """
-
-@app.route("/gen", methods=["POST"])
-def gen():
-    if session.get("user") != "demon":
-        return "No admin"
-
+# 🛒 tienda
+@app.route("/buy", methods=["POST"])
+def buy():
     db = load()
-    tipo = request.form.get("tipo","1d")
-    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    db["codes"][code] = tipo
+    u = db["users"][session["user"]]
+
+    if u["coins"] >= 50:
+        u["coins"] -= 50
+        u["vip"] = time.time() + 86400
+
     save(db)
-    return f"CODIGO: {code}"
+    return redirect("/home")
 
-# -------- CHAT SIMPLE --------
-@app.route("/chat/<other>", methods=["GET","POST"])
-def chat(other):
-    if "user" not in session:
-        return redirect("/")
-
+# ⚙️ admin coins
+@app.route("/give", methods=["POST"])
+def give():
     db = load()
-    me = session["user"]
-    cid = "_".join(sorted([me, other]))
 
-    if cid not in db["chats"]:
-        db["chats"][cid] = []
+    if session.get("user") != "demon":
+        return "No admin"
 
-    if request.method == "POST":
-        msg = request.form.get("msg","").strip()
-        if msg:
-            db["chats"][cid].append({"from": me, "msg": msg})
-            save(db)
+    user = request.form["user"]
+    coins = int(request.form["coins"])
 
-    return render_template("chat.html", msgs=db["chats"][cid][-50:], other=other)
+    if user in db["users"]:
+        db["users"][user]["coins"] += coins
 
-# -------- LOGOUT --------
+    save(db)
+    return redirect("/home")
+
+# logout
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-# -------- START --------
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
