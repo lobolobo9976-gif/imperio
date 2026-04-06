@@ -1,10 +1,15 @@
-from flask import Flask, request, redirect, render_template, session
-import os, json, time, random
+from flask import Flask, request, redirect, render_template, session, send_file
+import os, json, time, random, string
+import yt_dlp
 
 app = Flask(__name__)
 app.secret_key = "imperio_ultra"
 
 DB = "db.json"
+CODES = "codes.json"
+DOWNLOAD_FOLDER = "downloads"
+
+os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 def load():
     if not os.path.exists(DB):
@@ -14,26 +19,22 @@ def load():
 def save(data):
     json.dump(data, open(DB, "w"), indent=2)
 
+def load_codes():
+    if not os.path.exists(CODES):
+        return {}
+    return json.load(open(CODES))
+
+def save_codes(data):
+    json.dump(data, open(CODES, "w"), indent=2)
+
 def now():
     return int(time.time())
 
-def day():
-    return int(time.time()/86400)
-
-# XP progresiva hasta 300
 def xp_needed(level):
-    return int(40 + (level-1)*20)
+    return int(40 + (level-1)*15)
 
-# misiones random
-def missions():
-    pool = [
-        {"text":"Descarga 1 video","goal":1,"reward":1},
-        {"text":"Descarga 3 videos","goal":3,"reward":2},
-        {"text":"Gana 40 XP","goal":40,"reward":2},
-        {"text":"Usa la web 5 veces","goal":5,"reward":2},
-        {"text":"Sube 1 nivel","goal":1,"reward":3}
-    ]
-    return random.sample(pool,5)
+def gen_code():
+    return ''.join(random.choices(string.ascii_uppercase+string.digits, k=10))
 
 # LOGIN
 @app.route("/", methods=["GET","POST"])
@@ -52,10 +53,8 @@ def login():
                 "level":1,
                 "use":0,
                 "last":0,
-                "missions":[],
-                "done":[0]*5,
-                "day":0,
-                "vip":0
+                "vip":0,
+                "banned":False
             }
 
         if db["users"][u]["pass"] == p:
@@ -74,14 +73,7 @@ def home():
     db = load()
     u = db["users"][session["user"]]
 
-    # reset diario
-    if u["day"] != day():
-        u["missions"] = missions()
-        u["done"] = [0]*5
-        u["day"] = day()
-        u["use"] = 0
-
-    save(db)
+    vip_rest = max(0, u["vip"] - now())
 
     return render_template("index.html",
         user=session["user"],
@@ -89,103 +81,172 @@ def home():
         xp=u["xp"],
         level=u["level"],
         need=xp_needed(u["level"]),
-        missions=u["missions"],
-        done=u["done"]
+        vip=vip_rest
     )
 
-# DESCARGA
+# DESCARGA REAL
 @app.route("/download", methods=["POST"])
 def download():
     db = load()
     u = db["users"][session["user"]]
+
+    if u["banned"]:
+        return "🚫 Baneado"
 
     url = request.form.get("url")
 
     if not url:
         return "Pon URL"
 
-    # anti spam
-    if now() - u["last"] < 3:
-        return "⏳ Espera 3s"
-
-    # límite free
-    if u["use"] >= 10 and u["vip"] < now():
-        return "❌ Límite diario alcanzado"
+    if u["vip"] < now():
+        if now() - u["last"] < 10:
+            return "⏳ Espera 10s"
 
     u["last"] = now()
     u["use"] += 1
-    u["xp"] += 10
+    u["xp"] += 15
 
-    # nivel
     if u["level"] < 300 and u["xp"] >= xp_needed(u["level"]):
         u["xp"] = 0
         u["level"] += 1
         u["coins"] += 2
 
-    # misiones
-    for i,m in enumerate(u["missions"]):
-        if u["done"][i] == 1:
-            continue
-
-        if "Descarga" in m["text"] and u["use"] >= m["goal"]:
-            u["coins"] += m["reward"]
-            u["done"][i] = 1
-
-        if "XP" in m["text"] and u["xp"] >= m["goal"]:
-            u["coins"] += m["reward"]
-            u["done"][i] = 1
-
     save(db)
 
-    # 🔥 descarga externa
-    if "youtube" in url or "youtu.be" in url:
-        return redirect(f"https://y2mate.com/youtube/{url}")
+    filename = f"{int(time.time())}.mp4"
+    path = os.path.join(DOWNLOAD_FOLDER, filename)
 
-    return redirect(url)
+    ydl_opts = {
+        'outtmpl': path,
+        'format': 'mp4',
+        'quiet': True
+    }
 
-# 🎰 RULETA
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except:
+        return "❌ Error descarga"
+
+    return send_file(path, as_attachment=True)
+
+# 🎰 CASINO
 @app.route("/spin")
 def spin():
     db = load()
     u = db["users"][session["user"]]
 
     if u["coins"] < 5:
-        return "No tienes coins"
+        return "❌ No coins"
 
     u["coins"] -= 5
 
-    premio = random.choice([
-        ("+2 coins",2),
-        ("+5 coins",5),
-        ("+10 XP","xp"),
-        ("Nada",0)
-    ])
+    r = random.choice([0,2,5,10,20])
 
-    if premio[1] == "xp":
-        u["xp"] += 10
+    if r == 0:
+        msg = "💀 Perdiste"
     else:
-        u["coins"] += premio[1]
+        u["coins"] += r
+        msg = f"🔥 Ganaste {r}"
 
     save(db)
 
-    return f"🎰 Resultado: {premio[0]} <br><a href='/home'>Volver</a>"
+    return f"{msg}<br><a href='/home'>Volver</a>"
 
-# ADMIN coins
-@app.route("/give", methods=["POST"])
-def give():
+# 💎 COMPRAR VIP
+PRICES = {
+    "vip_dia": 50,
+    "vip_mes": 500,
+    "vip_inf": 2000
+}
+
+@app.route("/buy/<tipo>")
+def buy(tipo):
+    db = load()
+    u = db["users"][session["user"]]
+
+    if tipo not in PRICES:
+        return "Error"
+
+    if u["coins"] < PRICES[tipo]:
+        return "❌ No coins"
+
+    u["coins"] -= PRICES[tipo]
+
+    if tipo == "vip_dia":
+        u["vip"] = now() + 86400
+    elif tipo == "vip_mes":
+        u["vip"] = now() + 2592000
+    elif tipo == "vip_inf":
+        u["vip"] = 9999999999
+
+    save(db)
+
+    return "💎 VIP ACTIVADO<br><a href='/home'>Volver</a>"
+
+# 🎟️ GENERAR CÓDIGOS
+@app.route("/admin_codes", methods=["GET","POST"])
+def admin_codes():
+    if session.get("user") != "demon":
+        return "🚫 No admin"
+
+    codes = load_codes()
+
+    if request.method == "POST":
+        t = int(request.form["time"])
+        unit = request.form["unit"]
+
+        if unit == "seg":
+            sec = t
+        elif unit == "min":
+            sec = t*60
+        elif unit == "dia":
+            sec = t*86400
+        elif unit == "mes":
+            sec = t*2592000
+        elif unit == "inf":
+            sec = 9999999999
+
+        code = gen_code()
+
+        codes[code] = {"time":sec,"used":False}
+        save_codes(codes)
+
+        return f"🔥 Código: {code}<br><a href='/admin_codes'>Volver</a>"
+
+    return """
+    <h2>GENERAR CÓDIGO</h2>
+    <form method="post">
+    Tiempo: <input name="time"><br>
+    <select name="unit">
+    <option value="seg">Segundos</option>
+    <option value="min">Minutos</option>
+    <option value="dia">Días</option>
+    <option value="mes">Mes</option>
+    <option value="inf">Infinito</option>
+    </select><br>
+    <button>Generar</button>
+    </form>
+    """
+
+# CANJEAR
+@app.route("/redeem", methods=["POST"])
+def redeem():
+    codes = load_codes()
     db = load()
 
-    if session.get("user") != "demon":
-        return "No admin"
+    code = request.form["code"]
 
-    user = request.form["user"]
-    coins = int(request.form["coins"])
+    if code not in codes or codes[code]["used"]:
+        return "❌ Código inválido"
 
-    if user in db["users"]:
-        db["users"][user]["coins"] += coins
+    db["users"][session["user"]]["vip"] = now() + codes[code]["time"]
+    codes[code]["used"] = True
 
     save(db)
-    return redirect("/home")
+    save_codes(codes)
+
+    return "🔥 VIP ACTIVADO<br><a href='/home'>Volver</a>"
 
 @app.route("/logout")
 def logout():

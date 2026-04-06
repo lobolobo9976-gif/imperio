@@ -5,50 +5,39 @@
 <h1>🔥 IMPERIO 💀</h1>
 
 👤 {{user}}<br>
-💰 {{money}}€<br>
-💸 Referidos: {{earn}}<br>
-
-🎯 Nivel: {{level}} | XP: {{xp}}<br>
-⭐ Puntos: {{points}}<br>
-
-📊 Total: {{total}}
+💰 {{coins}} coins<br>
+🎯 Nivel {{level}}<br>
+XP {{xp}} / {{need}}
 
 <hr>
 
-<form action="/download" method="post">
-<input name="url" placeholder="URL"><br><br>
+<form action="/download" method="post" onsubmit="start()">
+<input name="url" placeholder="URL YouTube"><br><br>
 <button>DESCARGAR</button>
 </form>
 
-<hr>
+<div style="width:80%;margin:auto;background:#222">
+<div id="bar" style="width:0;height:20px;background:#00ffcc"></div>
+</div>
 
-<form action="/activar" method="post">
-<input name="code" placeholder="Código VIP">
-<button>Activar</button>
-</form>
-
-{% if last_reward %}
-🎁 Premio: {{last_reward}}<br>
-{% endif %}
-
-<hr>
-
-<h3>📜 Historial</h3>
-{% for h in history %}
-{{h.time}} - {{h.url}}<br>
-{% endfor %}
+<script>
+function start(){
+ let w=0
+ let bar=document.getElementById("bar")
+ let i=setInterval(()=>{
+  w+=3
+  bar.style.width=w+"%"
+  if(w>=100) clearInterval(i)
+ },200)
+}
+</script>
 
 <hr>
 
-<h3>💬 Chat</h3>
-<form action="/chat/test" method="get">
-<input name="user" placeholder="Usuario">
-<button>Chat</button>
-</form>
+<a href="/spin"><button>🎰 Casino</button></a>
+<a href="/mission"><button>🎯 Misión</button></a>
 
-<hr>
-
-<a href="/admin">ADMIN</a><br>
+<br><br>
 <a href="/logout">Salir</a>
 
 </body>

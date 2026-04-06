@@ -5,64 +5,42 @@
 <h1>🔥 IMPERIO 💀</h1>
 
 👤 {{user}}<br>
-💰 Coins: {{coins}}<br>
-🎯 Nivel: {{level}}<br>
-XP: {{xp}} / {{need}}<br>
+💰 {{coins}} coins<br>
+🎯 Nivel {{level}}<br>
+XP {{xp}} / {{need}}<br>
+💎 VIP: {{vip}} seg
 
 <hr>
 
-<form action="/download" method="post" onsubmit="startBar()">
+<form action="/download" method="post">
 <input name="url" placeholder="URL YouTube"><br><br>
 <button>DESCARGAR</button>
 </form>
 
-<div style="width:80%;margin:auto;background:#222">
-<div id="bar" style="width:0%;height:20px;background:#00ffcc"></div>
-</div>
+<hr>
 
-<script>
-function startBar(){
- let w=0;
- let bar=document.getElementById("bar");
- let i=setInterval(()=>{
-  w+=10;
-  if(w>=100){w=100;clearInterval(i);}
-  bar.style.width=w+"%";
- },300);
-}
-</script>
+<a href="/spin"><button>🎰 Casino</button></a>
 
 <hr>
 
-<h3>🎯 Misiones</h3>
+<h3>💎 VIP</h3>
 
-{% for m in missions %}
-<div>
-{{m.text}} (+{{m.reward}})
-{% if done[loop.index0] == 1 %}
-✅
-{% else %}
-❌
-{% endif %}
-</div>
-{% endfor %}
+<a href="/buy/vip_dia"><button>1 Día (50)</button></a>
+<a href="/buy/vip_mes"><button>1 Mes (500)</button></a>
+<a href="/buy/vip_inf"><button>∞ (2000)</button></a>
 
 <hr>
 
-<h3>🎰 Casino</h3>
-<a href="/spin"><button>Girar (5 coins)</button></a>
-
-<hr>
-
-<h3>⚙️ Admin</h3>
-
-<form action="/give" method="post">
-<input name="user" placeholder="usuario">
-<input name="coins" placeholder="coins">
-<button>Enviar</button>
+<form action="/redeem" method="post">
+<input name="code" placeholder="Código VIP">
+<button>Canjear</button>
 </form>
 
-<br>
+<hr>
+
+<a href="/admin_codes"><button>⚙️ Generar códigos</button></a>
+
+<br><br>
 <a href="/logout">Salir</a>
 
 </body>
