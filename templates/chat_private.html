@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffcc">
+
+<h2>💬 Chat con {{other}}</h2>
+
+<div id="chat" style="height:300px;overflow:auto;border:1px solid #00ffcc">
+{% for m in msgs %}
+<b>{{m.from}}</b>: {{m.msg}}<br>
+{% endfor %}
+</div>
+
+<form method="post">
+<input name="msg">
+<button>Enviar</button>
+</form>
+
+<a href="/home">Volver</a>
+
+<script>
+setInterval(()=>{
+fetch("/chat_data/{{other}}")
+.then(r=>r.json())
+.then(data=>{
+let html=""
+data.forEach(m=>{
+html+=`<b>${m.from}</b>: ${m.msg}<br>`
+})
+document.getElementById("chat").innerHTML=html
+})
+},2000)
+</script>
+
+</body>
+</html>
