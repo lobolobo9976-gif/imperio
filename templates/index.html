@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffcc;text-align:center">
+
+<h1>🔥 IMPERIO 💀</h1>
+
+👤 {{user}} <br>
+🎯 Nivel: {{level}} | XP: {{xp}} <br>
+📥 Usos: {{use}} / {{limit}} <br>
+📊 Total descargas: {{total}} <br>
+
+{% if vip %}
+💎 VIP ACTIVO <br>
+{% endif %}
+
+<hr>
+
+<form action="/download" method="post">
+<input name="url" placeholder="URL">
+<button>DESCARGAR</button>
+</form>
+
+<hr>
+
+<h3>🎁 Activar código</h3>
+<form action="/activar" method="post">
+<input name="code">
+<button>Activar</button>
+</form>
+
+{% if last_reward %}
+<br>🎉 Código ganado: {{last_reward}}
+{% endif %}
+
+<hr>
+
+<h3>📜 Historial</h3>
+{% for h in history %}
+{{h.time}} - {{h.url}}<br>
+{% endfor %}
+
+<hr>
+
+<h3>💬 Chat</h3>
+<form action="/chat/test">
+<input name="other" placeholder="usuario">
+<button>Abrir</button>
+</form>
+
+<br>
+
+<a href="/admin">ADMIN</a><br>
+<a href="/logout">Salir</a>
+
+</body>
+</html>
