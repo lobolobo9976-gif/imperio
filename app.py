@@ -15,43 +15,38 @@ def download():
     if not url:
         return "❌ URL inválida"
 
-    ydl_opts = {
-        "quiet": True,
-        "noplaylist": True,
-
-        # 🔥 velocidad + compatibilidad
-        "format": "bv*+ba/best",
-        
-        "nocheckcertificate": True,
-
-        # 🔥 truco para YouTube
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["android", "web"]
+    try:
+        # 🔥 CONFIG PRINCIPAL (rápido)
+        ydl_opts = {
+            "quiet": True,
+            "noplaylist": True,
+            "format": "best[ext=mp4]/best",
+            "nocheckcertificate": True,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android", "web"]
+                }
             }
         }
-    }
 
-    try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
-            # 🔥 coger mejor formato real
-            formats = info.get("formats", [])
-            best = None
+            # 🔥 buscar mejor enlace válido
+            if "formats" in info:
+                for f in reversed(info["formats"]):
+                    if f.get("url"):
+                        return redirect(f["url"])
 
-            for f in formats[::-1]:
-                if f.get("url"):
-                    best = f["url"]
-                    break
+            if "url" in info:
+                return redirect(info["url"])
 
-            if not best:
-                return "❌ No se pudo obtener enlace"
+            return "❌ No se pudo obtener enlace"
 
-            return redirect(best)
+    except Exception:
+        # 💣 FALLBACK (cuando YouTube falla)
+        return redirect(f"https://www.y2mate.is/youtube?url={url}")
 
-    except Exception as e:
-        return f"❌ Error: {str(e)}"
-
+# Render compatible
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
