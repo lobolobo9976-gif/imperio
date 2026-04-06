@@ -4,41 +4,42 @@
 
 <h1>🔥 IMPERIO 💀</h1>
 
-👤 {{user}}<br>
-💰 {{coins}} coins<br>
-🎯 Nivel {{level}}<br>
-XP {{xp}} / {{need}}
+<form id="f">
+<input name="url1"><br>
+<input name="url2"><br>
+<input name="url3"><br>
+<input name="url4"><br>
+<input name="url5"><br>
+<input name="url6"><br><br>
 
-<hr>
-
-<form action="/download" method="post" onsubmit="start()">
-<input name="url" placeholder="URL YouTube"><br><br>
-<button>DESCARGAR</button>
+<button type="button" onclick="start()">DESCARGAR</button>
 </form>
 
-<div style="width:80%;margin:auto;background:#222">
-<div id="bar" style="width:0;height:20px;background:#00ffcc"></div>
-</div>
+<div id="progress"></div>
 
 <script>
-function start(){
- let w=0
- let bar=document.getElementById("bar")
- let i=setInterval(()=>{
-  w+=3
-  bar.style.width=w+"%"
-  if(w>=100) clearInterval(i)
- },200)
+async function start(){
+ let form=new FormData(document.getElementById("f"))
+ let r=await fetch("/download",{method:"POST",body:form})
+ let ids=await r.json()
+
+ let div=document.getElementById("progress")
+
+ ids.forEach(id=>{
+  let el=document.createElement("div")
+  div.appendChild(el)
+
+  setInterval(async ()=>{
+   let p=await fetch("/progress/"+id)
+   let d=await p.json()
+   el.innerHTML=id+" "+d.progress
+  },1000)
+ })
 }
 </script>
 
-<hr>
-
-<a href="/spin"><button>🎰 Casino</button></a>
-<a href="/mission"><button>🎯 Misión</button></a>
-
-<br><br>
-<a href="/logout">Salir</a>
+<a href="/spin">Casino</a>
+<a href="/admin">Admin</a>
 
 </body>
 </html>

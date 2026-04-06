@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center">
+
+<h2>ADMIN</h2>
+
+<form method="post">
+Usuario <input name="user"><br>
+Coins <input name="coins"><br>
+<button>Dar Coins</button>
+</form>
+
+<hr>
+
+<form method="post">
+<input name="time">
+<select name="unit">
+<option value="seg">Seg</option>
+<option value="min">Min</option>
+<option value="dia">Dia</option>
+<option value="mes">Mes</option>
+<option value="inf">Inf</option>
+</select>
+<button name="gen">Generar Código</button>
+</form>
+
+<hr>
+
+<h3>Códigos</h3>
+{% for c in codes %}
+<div>{{c}}</div>
+{% endfor %}
+
+</body>
+</html>
