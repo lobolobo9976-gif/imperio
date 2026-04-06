@@ -20,11 +20,11 @@ def now():
 def day():
     return int(time.time()/86400)
 
-# XP necesaria por nivel (hasta 300)
+# XP progresiva hasta 300
 def xp_needed(level):
     return int(40 + (level-1)*20)
 
-# misiones
+# misiones random
 def missions():
     pool = [
         {"text":"Descarga 1 video","goal":1,"reward":1},
@@ -54,7 +54,8 @@ def login():
                 "last":0,
                 "missions":[],
                 "done":[0]*5,
-                "day":0
+                "day":0,
+                "vip":0
             }
 
         if db["users"][u]["pass"] == p:
@@ -73,11 +74,12 @@ def home():
     db = load()
     u = db["users"][session["user"]]
 
-    # reset misiones diario
+    # reset diario
     if u["day"] != day():
         u["missions"] = missions()
         u["done"] = [0]*5
         u["day"] = day()
+        u["use"] = 0
 
     save(db)
 
@@ -91,7 +93,7 @@ def home():
         done=u["done"]
     )
 
-# DESCARGA REAL (con control)
+# DESCARGA
 @app.route("/download", methods=["POST"])
 def download():
     db = load()
@@ -102,20 +104,23 @@ def download():
     if not url:
         return "Pon URL"
 
-    # anti spam (3 segundos)
+    # anti spam
     if now() - u["last"] < 3:
-        return "⚠️ Espera 3s"
+        return "⏳ Espera 3s"
+
+    # límite free
+    if u["use"] >= 10 and u["vip"] < now():
+        return "❌ Límite diario alcanzado"
 
     u["last"] = now()
     u["use"] += 1
     u["xp"] += 10
 
-    # nivel hasta 300
-    if u["level"] < 300:
-        if u["xp"] >= xp_needed(u["level"]):
-            u["xp"] = 0
-            u["level"] += 1
-            u["coins"] += 2
+    # nivel
+    if u["level"] < 300 and u["xp"] >= xp_needed(u["level"]):
+        u["xp"] = 0
+        u["level"] += 1
+        u["coins"] += 2
 
     # misiones
     for i,m in enumerate(u["missions"]):
@@ -132,7 +137,38 @@ def download():
 
     save(db)
 
-    return redirect("/home")
+    # 🔥 descarga externa
+    if "youtube" in url or "youtu.be" in url:
+        return redirect(f"https://y2mate.com/youtube/{url}")
+
+    return redirect(url)
+
+# 🎰 RULETA
+@app.route("/spin")
+def spin():
+    db = load()
+    u = db["users"][session["user"]]
+
+    if u["coins"] < 5:
+        return "No tienes coins"
+
+    u["coins"] -= 5
+
+    premio = random.choice([
+        ("+2 coins",2),
+        ("+5 coins",5),
+        ("+10 XP","xp"),
+        ("Nada",0)
+    ])
+
+    if premio[1] == "xp":
+        u["xp"] += 10
+    else:
+        u["coins"] += premio[1]
+
+    save(db)
+
+    return f"🎰 Resultado: {premio[0]} <br><a href='/home'>Volver</a>"
 
 # ADMIN coins
 @app.route("/give", methods=["POST"])

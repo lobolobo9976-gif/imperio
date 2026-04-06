@@ -11,10 +11,26 @@ XP: {{xp}} / {{need}}<br>
 
 <hr>
 
-<form action="/download" method="post">
-<input name="url" placeholder="URL del video"><br><br>
+<form action="/download" method="post" onsubmit="startBar()">
+<input name="url" placeholder="URL YouTube"><br><br>
 <button>DESCARGAR</button>
 </form>
+
+<div style="width:80%;margin:auto;background:#222">
+<div id="bar" style="width:0%;height:20px;background:#00ffcc"></div>
+</div>
+
+<script>
+function startBar(){
+ let w=0;
+ let bar=document.getElementById("bar");
+ let i=setInterval(()=>{
+  w+=10;
+  if(w>=100){w=100;clearInterval(i);}
+  bar.style.width=w+"%";
+ },300);
+}
+</script>
 
 <hr>
 
@@ -30,6 +46,11 @@ XP: {{xp}} / {{need}}<br>
 {% endif %}
 </div>
 {% endfor %}
+
+<hr>
+
+<h3>🎰 Casino</h3>
+<a href="/spin"><button>Girar (5 coins)</button></a>
 
 <hr>
 
