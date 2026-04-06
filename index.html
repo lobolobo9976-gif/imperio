@@ -1,15 +1,55 @@
-<form action="/activar" method="post">
-<input name="code" placeholder="Código VIP">
-<button>Activar VIP</button>
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffcc;text-align:center">
+
+<h1>🔥 IMPERIO 💀</h1>
+
+👤 {{user}}<br>
+💰 {{money}}€<br>
+💸 Referidos: {{earn}}<br>
+
+🎯 Nivel: {{level}} | XP: {{xp}}<br>
+⭐ Puntos: {{points}}<br>
+
+📊 Total: {{total}}
+
+<hr>
+
+<form action="/download" method="post">
+<input name="url" placeholder="URL"><br><br>
+<button>DESCARGAR</button>
 </form>
 
-<br>
-
-💎 Plan: {{plan}} <br>
-⚡ Uso: {{uso}} / {{limite}}
 <hr>
-<h3>📜 Historial</h3>
 
+<form action="/activar" method="post">
+<input name="code" placeholder="Código VIP">
+<button>Activar</button>
+</form>
+
+{% if last_reward %}
+🎁 Premio: {{last_reward}}<br>
+{% endif %}
+
+<hr>
+
+<h3>📜 Historial</h3>
 {% for h in history %}
 {{h.time}} - {{h.url}}<br>
 {% endfor %}
+
+<hr>
+
+<h3>💬 Chat</h3>
+<form action="/chat/test" method="get">
+<input name="user" placeholder="Usuario">
+<button>Chat</button>
+</form>
+
+<hr>
+
+<a href="/admin">ADMIN</a><br>
+<a href="/logout">Salir</a>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffcc">
+
+<h2>Chat con {{other}}</h2>
+
+{% for m in msgs %}
+<b>{{m.from}}</b>: {{m.msg}}<br>
+{% endfor %}
+
+<form method="post">
+<input name="msg">
+<button>Enviar</button>
+</form>
+
+<a href="/home">Volver</a>
+
+</body>
+</html>
