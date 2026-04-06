@@ -2,10 +2,12 @@ from flask import Flask, request, redirect, render_template, session
 import yt_dlp, os, json, time, random, string
 
 app = Flask(__name__)
-app.secret_key = "imperio_final"
+app.secret_key = "imperio_total"
 
 DB = "db.json"
+CHAT_FILE = "chat.json"
 
+# ===== DB =====
 def load():
     if not os.path.exists(DB):
         return {"users": {}, "codes": {}, "downloads": 0, "ips": {}}
@@ -14,6 +16,16 @@ def load():
 def save(data):
     json.dump(data, open(DB, "w"), indent=2)
 
+# ===== CHAT =====
+def load_chat():
+    if not os.path.exists(CHAT_FILE):
+        return []
+    return json.load(open(CHAT_FILE))
+
+def save_chat(data):
+    json.dump(data, open(CHAT_FILE, "w"), indent=2)
+
+# ===== LIMITES =====
 def limit(plan):
     if plan == "free": return 5
     if plan == "vip": return 50
@@ -22,7 +34,7 @@ def limit(plan):
 def get_ip():
     return request.remote_addr
 
-# LOGIN
+# ===== LOGIN =====
 @app.route("/", methods=["GET","POST"])
 def login():
     db = load()
@@ -57,7 +69,7 @@ def login():
 
     return render_template("login.html")
 
-# HOME
+# ===== HOME =====
 @app.route("/home")
 def home():
     if "user" not in session:
@@ -83,7 +95,7 @@ def home():
         history=u["history"]
     )
 
-# DESCARGA (ANTI ABUSO PRO)
+# ===== DESCARGA =====
 @app.route("/download", methods=["POST"])
 def download():
     if "user" not in session:
@@ -145,7 +157,7 @@ def download():
     except:
         return redirect(f"https://www.y2mate.is/youtube?url={url}")
 
-# ACTIVAR VIP
+# ===== VIP =====
 @app.route("/activar", methods=["POST"])
 def activar():
     db = load()
@@ -168,7 +180,7 @@ def activar():
 
     return redirect("/home")
 
-# ADMIN
+# ===== ADMIN =====
 @app.route("/admin")
 def admin():
     if session.get("user") != "demon":
@@ -214,6 +226,31 @@ def gen():
     save(db)
     return f"CODIGO: {code}"
 
+# ===== CHAT =====
+@app.route("/chat", methods=["GET","POST"])
+def chat():
+    if "user" not in session:
+        return redirect("/")
+
+    if request.method == "POST":
+        msg = request.form["msg"]
+        data = load_chat()
+
+        data.append({
+            "user": session["user"],
+            "msg": msg,
+            "time": time.strftime("%H:%M")
+        })
+
+        save_chat(data)
+
+    return render_template("chat.html", msgs=load_chat())
+
+@app.route("/chat_data")
+def chat_data():
+    return load_chat()
+
+# ===== LOGOUT =====
 @app.route("/logout")
 def logout():
     session.clear()
