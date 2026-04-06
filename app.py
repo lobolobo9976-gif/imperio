@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect, render_template, session, send_file
-import os, json, time, random, string
+import os, json, time, random, string, threading, requests
 import yt_dlp
 
 app = Flask(__name__)
@@ -35,6 +35,21 @@ def xp_needed(level):
 
 def gen_code():
     return ''.join(random.choices(string.ascii_uppercase+string.digits, k=10))
+
+# 🔥 NO DORMIR (ping interno)
+def keep_alive():
+    while True:
+        try:
+            requests.get("https://TUWEB.onrender.com/ping")
+        except:
+            pass
+        time.sleep(240)
+
+threading.Thread(target=keep_alive).start()
+
+@app.route("/ping")
+def ping():
+    return "ok"
 
 # LOGIN
 @app.route("/", methods=["GET","POST"])
@@ -84,7 +99,7 @@ def home():
         vip=vip_rest
     )
 
-# DESCARGA REAL
+# 💣 DESCARGA REAL
 @app.route("/download", methods=["POST"])
 def download():
     db = load()
@@ -140,7 +155,6 @@ def spin():
         return "❌ No coins"
 
     u["coins"] -= 5
-
     r = random.choice([0,2,5,10,20])
 
     if r == 0:
@@ -150,10 +164,9 @@ def spin():
         msg = f"🔥 Ganaste {r}"
 
     save(db)
-
     return f"{msg}<br><a href='/home'>Volver</a>"
 
-# 💎 COMPRAR VIP
+# 💎 TIENDA VIP
 PRICES = {
     "vip_dia": 50,
     "vip_mes": 500,
@@ -165,23 +178,19 @@ def buy(tipo):
     db = load()
     u = db["users"][session["user"]]
 
-    if tipo not in PRICES:
-        return "Error"
-
-    if u["coins"] < PRICES[tipo]:
+    if u["coins"] < PRICES.get(tipo,0):
         return "❌ No coins"
 
     u["coins"] -= PRICES[tipo]
 
     if tipo == "vip_dia":
-        u["vip"] = now() + 86400
+        u["vip"] = now()+86400
     elif tipo == "vip_mes":
-        u["vip"] = now() + 2592000
+        u["vip"] = now()+2592000
     elif tipo == "vip_inf":
         u["vip"] = 9999999999
 
     save(db)
-
     return "💎 VIP ACTIVADO<br><a href='/home'>Volver</a>"
 
 # 🎟️ GENERAR CÓDIGOS
@@ -196,19 +205,15 @@ def admin_codes():
         t = int(request.form["time"])
         unit = request.form["unit"]
 
-        if unit == "seg":
-            sec = t
-        elif unit == "min":
-            sec = t*60
-        elif unit == "dia":
-            sec = t*86400
-        elif unit == "mes":
-            sec = t*2592000
-        elif unit == "inf":
-            sec = 9999999999
+        sec = {
+            "seg":t,
+            "min":t*60,
+            "dia":t*86400,
+            "mes":t*2592000,
+            "inf":9999999999
+        }[unit]
 
         code = gen_code()
-
         codes[code] = {"time":sec,"used":False}
         save_codes(codes)
 
@@ -240,7 +245,7 @@ def redeem():
     if code not in codes or codes[code]["used"]:
         return "❌ Código inválido"
 
-    db["users"][session["user"]]["vip"] = now() + codes[code]["time"]
+    db["users"][session["user"]]["vip"] = now()+codes[code]["time"]
     codes[code]["used"] = True
 
     save(db)
@@ -252,5 +257,5 @@ def redeem():
 def logout():
     session.clear()
     return redirect("/")
-
+    
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
