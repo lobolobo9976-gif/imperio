@@ -3,7 +3,7 @@ import os, json, time, random, string, threading
 import yt_dlp
 
 app = Flask(__name__)
-app.secret_key = "imperio_dios"
+app.secret_key = "imperio_full"
 
 DB = "db.json"
 CODES = "codes.json"
@@ -13,7 +13,6 @@ os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 queue = []
 progress_data = {}
 
-# ---------------- DB ----------------
 def load():
     try:
         return json.load(open(DB))
@@ -27,9 +26,9 @@ def now():
     return int(time.time())
 
 def xp_needed(level):
-    return 40 + (level*20)
+    return 40 + level*20
 
-# ---------------- WORKER ----------------
+# -------- WORKER DESCARGA --------
 def worker():
     while True:
         if queue:
@@ -57,7 +56,7 @@ def worker():
 
 threading.Thread(target=worker, daemon=True).start()
 
-# ---------------- LOGIN ----------------
+# -------- LOGIN --------
 @app.route("/", methods=["GET","POST"])
 def login():
     db = load()
@@ -69,11 +68,10 @@ def login():
         if u not in db["users"]:
             db["users"][u] = {
                 "pass":p,
-                "coins":5,
+                "coins":10,
                 "xp":0,
                 "level":1,
-                "vip":0,
-                "missions":{}
+                "vip":0
             }
 
         if db["users"][u]["pass"] == p:
@@ -83,33 +81,21 @@ def login():
 
     return render_template("login.html")
 
-# ---------------- HOME ----------------
+# -------- HOME --------
 @app.route("/home")
 def home():
-    if "user" not in session:
-        return redirect("/")
-
     db = load()
     u = db["users"][session["user"]]
-
-    missions = [
-        ("Descarga 1 video","+1 coin"),
-        ("Descarga 3 videos","+2 coins"),
-        ("Gana 20 XP","+2 coins"),
-        ("Usa la web","+1 coin"),
-        ("Sube nivel","+3 coins")
-    ]
 
     return render_template("index.html",
         user=session["user"],
         coins=u["coins"],
         xp=u["xp"],
         level=u["level"],
-        need=xp_needed(u["level"]),
-        missions=missions
+        need=xp_needed(u["level"])
     )
 
-# ---------------- DOWNLOAD ----------------
+# -------- DESCARGA --------
 @app.route("/download", methods=["POST"])
 def download():
     db = load()
@@ -133,7 +119,6 @@ def download():
         queue.append({"url":url,"hook":hook,"id":pid})
         ids.append(pid)
 
-    # 💣 recompensas
     u["xp"] += len(ids)*10
     u["coins"] += len(ids)
 
@@ -148,7 +133,7 @@ def download():
 def progress(pid):
     return jsonify(progress_data.get(pid,{}))
 
-# ---------------- CASINO ----------------
+# -------- CASINO --------
 @app.route("/casino")
 def casino():
     return render_template("casino.html")
@@ -162,7 +147,6 @@ def spin():
         return "No coins"
 
     u["coins"] -= 5
-
     r = random.choice([0,2,5,10,20])
 
     if r > 0:
@@ -171,7 +155,55 @@ def spin():
     save(db)
     return str(r)
 
-# ---------------- ADMIN ----------------
+# -------- TIENDA --------
+@app.route("/shop")
+def shop():
+    db = load()
+    return render_template("shop.html", coins=db["users"][session["user"]]["coins"])
+
+@app.route("/buy_vip/<tipo>")
+def buy_vip(tipo):
+    db = load()
+    u = db["users"][session["user"]]
+
+    precios = {"dia":50,"mes":200,"inf":1000}
+    tiempos = {"dia":86400,"mes":2592000,"inf":9999999999}
+
+    if u["coins"] < precios[tipo]:
+        return "No coins"
+
+    u["coins"] -= precios[tipo]
+    u["vip"] = now() + tiempos[tipo]
+
+    save(db)
+    return redirect("/home")
+
+# -------- COFRES --------
+@app.route("/chest")
+def chest():
+    db = load()
+    u = db["users"][session["user"]]
+
+    if u["coins"] < 10:
+        return "No coins"
+
+    u["coins"] -= 10
+
+    premio = random.choice(["coins","xp","vip"])
+
+    if premio == "coins":
+        u["coins"] += random.randint(5,20)
+
+    elif premio == "xp":
+        u["xp"] += 20
+
+    elif premio == "vip":
+        u["vip"] = now() + 60
+
+    save(db)
+    return redirect("/home")
+
+# -------- ADMIN --------
 @app.route("/admin", methods=["GET","POST"])
 def admin():
     if session.get("user") != "demon":
@@ -189,5 +221,9 @@ def admin():
     save(db)
     return render_template("admin.html", users=db["users"])
 
-# ---------------- RUN ----------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))

@@ -1,22 +1,18 @@
 <!DOCTYPE html>
 <html>
 <body style="background:black;color:#00ffcc;text-align:center">
-
-<h2>🎰 CASINO IMPERIO</h2>
-
-<button onclick="spin()">GIRAR (5 coins)</button>
-
+<h2>🎰 CASINO</h2>
+<button onclick="spin()">Girar</button>
 <h1 id="r">?</h1>
 
 <script>
 async function spin(){
- let res = await fetch("/spin")
- let txt = await res.text()
- document.getElementById("r").innerHTML = txt
+ let r=await fetch("/spin")
+ let t=await r.text()
+ document.getElementById("r").innerHTML=t
 }
 </script>
 
 <a href="/home">Volver</a>
-
 </body>
 </html>

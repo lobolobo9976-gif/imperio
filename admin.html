@@ -5,31 +5,12 @@
 <h2>ADMIN</h2>
 
 <form method="post">
-Usuario <input name="user"><br>
-Coins <input name="coins"><br>
+<input name="user">
+<input name="coins">
 <button>Dar Coins</button>
 </form>
 
-<hr>
-
-<form method="post">
-<input name="time">
-<select name="unit">
-<option value="seg">Seg</option>
-<option value="min">Min</option>
-<option value="dia">Dia</option>
-<option value="mes">Mes</option>
-<option value="inf">Inf</option>
-</select>
-<button name="gen">Generar Código</button>
-</form>
-
-<hr>
-
-<h3>Códigos</h3>
-{% for c in codes %}
-<div>{{c}}</div>
-{% endfor %}
+<a href="/home">Volver</a>
 
 </body>
 </html>

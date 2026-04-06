@@ -1,3 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffcc;text-align:center">
+
+<h1>🔥 IMPERIO 💀</h1>
+
+{{user}} | 💰 {{coins}} | 🎯 {{level}} | XP {{xp}}/{{need}}
+
 <form id="f">
 <input name="url1"><br>
 <input name="url2"><br>
@@ -13,13 +21,13 @@
 
 <script>
 async function start(){
- let form=new FormData(document.getElementById("f"))
- let r=await fetch("/download",{method:"POST",body:form})
+ let f=new FormData(document.getElementById("f"))
+ let r=await fetch("/download",{method:"POST",body:f})
  let ids=await r.json()
 
  ids.forEach(id=>{
   let el=document.createElement("div")
-  document.getElementById("progress").appendChild(el)
+  document.body.appendChild(el)
 
   setInterval(async ()=>{
    let p=await fetch("/progress/"+id)
@@ -30,4 +38,12 @@ async function start(){
 }
 </script>
 
-<a href="/casino">🎰 Casino</a>
+<br>
+<a href="/casino">🎰 Casino</a><br>
+<a href="/shop">🛒 Tienda</a><br>
+<a href="/chest">🎁 Cofre</a><br>
+<a href="/admin">⚙️ Admin</a><br>
+<a href="/logout">Salir</a>
+
+</body>
+</html>
