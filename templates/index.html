@@ -1,42 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>🔥 IMPERIO PRO 🔥</title>
-    <style>
-        body {
-            background: black;
-            color: #00ffcc;
-            font-family: Arial;
-            text-align: center;
-        }
-        input {
-            padding: 10px;
-            width: 70%;
-            margin: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background: #00ffcc;
-            border: none;
-            cursor: pointer;
-        }
-        .box {
-            border: 1px solid #00ffcc;
-            margin: 20px;
-            padding: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>🔥 IMPERIO PRO 🔥</title>
+
+<style>
+body {
+    background: radial-gradient(circle, #000000, #0a0a0a);
+    color: #00ffcc;
+    font-family: Arial;
+    text-align: center;
+    margin: 0;
+}
+
+h1 {
+    margin-top: 30px;
+    font-size: 35px;
+}
+
+.box {
+    border: 1px solid #00ffcc;
+    margin: 30px auto;
+    padding: 25px;
+    width: 85%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #00ffcc44;
+}
+
+input {
+    padding: 12px;
+    width: 80%;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+button {
+    padding: 12px 25px;
+    background: #00ffcc;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #00ccaa;
+}
+
+.loading {
+    display: none;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #888;
+}
+</style>
+
+<script>
+function loading(){
+    document.getElementById("load").style.display = "block";
+}
+</script>
+
 </head>
+
 <body>
 
 <h1>🔥 IMPERIO PRO 🔥</h1>
 
 <div class="box">
-    <form action="/download" method="post">
-        <input type="text" name="url" placeholder="Pega URL aquí">
+    <form action="/download" method="post" onsubmit="loading()">
+        <input type="text" name="url" placeholder="Pega URL (YouTube, TikTok, etc)" required>
         <br>
         <button type="submit">⚡ DESCARGAR</button>
     </form>
+
+    <div id="load" class="loading">
+        ⏳ Procesando enlace... espera unos segundos
+    </div>
+</div>
+
+<div class="box">
+    <h3>🚀 ¿Qué puedes descargar?</h3>
+    ✔ YouTube<br>
+    ✔ TikTok<br>
+    ✔ Instagram<br>
+    ✔ Facebook<br>
+    ✔ Otras webs compatibles<br><br>
+
+    ⚠️ Si falla, se abrirá una opción alternativa automáticamente
+</div>
+
+<div class="box">
+    <h3>💎 Modo VIP</h3>
+
+    🔥 DÍAS (barato)<br>
+    1 día → 0.50€<br>
+    3 días → 1€<br>
+    7 días → 2€<br><br>
+
+    🔥 MESES (mejor oferta)<br>
+    1 mes → 2€<br>
+    3 meses → 5€<br>
+    6 meses → 8€<br>
+    12 meses → 10€<br><br>
+
+    💀 INFINITO ♾️ → 100€<br><br>
+
+    <a href="mailto:lobolobo9977@gmail.com?subject=Compra VIP">
+        <button>🛒 Comprar VIP</button>
+    </a>
+</div>
+
+<div class="footer">
+    ⚡ IMPERIO PRO - Descargas rápidas
 </div>
 
 </body>
