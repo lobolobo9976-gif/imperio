@@ -6,21 +6,23 @@
 
 👤 {{user}}<br>
 💰 Coins: {{coins}}<br>
-🎯 Nivel: {{level}} | XP: {{xp}}<br>
+🎯 Nivel: {{level}}<br>
+XP: {{xp}} / {{need}}<br>
 
 <hr>
 
 <form action="/download" method="post">
+<input name="url" placeholder="URL del video"><br><br>
 <button>DESCARGAR</button>
 </form>
 
 <hr>
 
-<h3>🎯 Misiones diarias</h3>
+<h3>🎯 Misiones</h3>
 
 {% for m in missions %}
 <div>
-{{m.text}} → +{{m.reward}} coins
+{{m.text}} (+{{m.reward}})
 {% if done[loop.index0] == 1 %}
 ✅
 {% else %}
@@ -31,24 +33,12 @@
 
 <hr>
 
-<h3>🛒 Tienda</h3>
-
-<form action="/buy" method="post">
-<button>💎 VIP 1 día (50 coins)</button>
-</form>
-
-<a href="https://www.paypal.com/donate/?hosted_button_id=QSA278KTS7XMN">
-<button>💳 Comprar coins</button>
-</a>
-
-<hr>
-
 <h3>⚙️ Admin</h3>
 
 <form action="/give" method="post">
 <input name="user" placeholder="usuario">
 <input name="coins" placeholder="coins">
-<button>Enviar coins</button>
+<button>Enviar</button>
 </form>
 
 <br>
