@@ -2,13 +2,13 @@ from flask import Flask, request, redirect, render_template, session
 import yt_dlp, os, json, time, random, string
 
 app = Flask(__name__)
-app.secret_key = "imperio_dios"
+app.secret_key = "imperio_final"
 
 DB = "db.json"
 
 def load():
     if not os.path.exists(DB):
-        return {"users": {}, "codes": {}, "downloads": 0}
+        return {"users": {}, "codes": {}, "downloads": 0, "ips": {}}
     return json.load(open(DB))
 
 def save(data):
@@ -19,32 +19,45 @@ def limit(plan):
     if plan == "vip": return 50
     if plan == "lifetime": return 999999
 
+def get_ip():
+    return request.remote_addr
+
+# LOGIN
 @app.route("/", methods=["GET","POST"])
 def login():
     db = load()
+    ip = get_ip()
 
     if request.method == "POST":
         u = request.form["user"]
         p = request.form["pass"]
 
+        if ip in db["ips"] and db["ips"][ip] != u:
+            return "🚫 Solo 1 cuenta por dispositivo"
+
         if u in db["users"]:
             if db["users"][u]["pass"] == p:
                 session["user"] = u
-                return redirect("/home")
         else:
             db["users"][u] = {
                 "pass": p,
                 "plan": "free",
                 "exp": 0,
                 "ban": False,
-                "use": 0
+                "use": 0,
+                "history": [],
+                "last": 0,
+                "strikes": 0
             }
-            save(db)
+            db["ips"][ip] = u
             session["user"] = u
-            return redirect("/home")
+
+        save(db)
+        return redirect("/home")
 
     return render_template("login.html")
 
+# HOME
 @app.route("/home")
 def home():
     if "user" not in session:
@@ -53,22 +66,24 @@ def home():
     db = load()
     u = db["users"][session["user"]]
 
-    # ban
     if u.get("ban"):
         return "🚫 Baneado"
 
-    # expiración
     if u["plan"] == "vip" and time.time() > u["exp"]:
         u["plan"] = "free"
+
+    save(db)
 
     return render_template("index.html",
         user=session["user"],
         plan=u["plan"],
         total=db["downloads"],
         limite=limit(u["plan"]),
-        uso=u["use"]
+        uso=u["use"],
+        history=u["history"]
     )
 
+# DESCARGA (ANTI ABUSO PRO)
 @app.route("/download", methods=["POST"])
 def download():
     if "user" not in session:
@@ -78,8 +93,20 @@ def download():
     db = load()
     u = db["users"][session["user"]]
 
+    now = time.time()
+
+    if now - u["last"] < 3:
+        u["strikes"] += 1
+        save(db)
+        return "⚠️ Espera unos segundos"
+
     if u["use"] >= limit(u["plan"]):
         return "❌ Límite alcanzado"
+
+    if u["strikes"] >= 5:
+        u["ban"] = True
+        save(db)
+        return "🚫 Baneado por abuso"
 
     ydl_opts = {
         "quiet": True,
@@ -95,7 +122,17 @@ def download():
             info = ydl.extract_info(url, download=False)
 
             u["use"] += 1
+            u["last"] = now
             db["downloads"] += 1
+
+            if u["strikes"] > 0:
+                u["strikes"] -= 1
+
+            u["history"].append({
+                "url": url,
+                "time": time.strftime("%H:%M:%S")
+            })
+
             save(db)
 
             if "url" in info:
@@ -108,6 +145,7 @@ def download():
     except:
         return redirect(f"https://www.y2mate.is/youtube?url={url}")
 
+# ACTIVAR VIP
 @app.route("/activar", methods=["POST"])
 def activar():
     db = load()
@@ -130,6 +168,7 @@ def activar():
 
     return redirect("/home")
 
+# ADMIN
 @app.route("/admin")
 def admin():
     if session.get("user") != "demon":
@@ -137,10 +176,11 @@ def admin():
 
     db = load()
 
-    html = "<h1>ADMIN PANEL 💀</h1>"
+    html = f"<h1>ADMIN 💀</h1>Total: {db['downloads']}<br><br>"
 
     for u in db["users"]:
-        html += f"{u} - {db['users'][u]['plan']} <a href='/ban/{u}'>BAN</a><br>"
+        user = db["users"][u]
+        html += f"{u} | {user['plan']} | uso:{user['use']} <a href='/ban/{u}'>BAN</a><br>"
 
     html += """
     <form action="/gen" method="post">

@@ -7,3 +7,9 @@
 
 💎 Plan: {{plan}} <br>
 ⚡ Uso: {{uso}} / {{limite}}
+<hr>
+<h3>📜 Historial</h3>
+
+{% for h in history %}
+{{h.time}} - {{h.url}}<br>
+{% endfor %}
