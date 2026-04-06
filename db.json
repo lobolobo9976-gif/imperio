@@ -1,0 +1,22 @@
+{
+  "usuarios": {
+    "demon": {
+      "pass": "123456",
+      "plan": "lifetime",
+      "uso": 1,
+      "reset": 1775477246.1306775,
+      "vip_expira": 1775565774.0681062
+    },
+    "lobomuerte": {
+      "pass": "lobomortal",
+      "plan": "vip",
+      "uso": 6,
+      "reset": 1775479249.7792566,
+      "vip_expira": 1775566844.5404935
+    }
+  },
+  "codigos": {
+    "6N332ZDURI": "1mes",
+    "0TQS8LKNYO": "1d"
+  }
+}

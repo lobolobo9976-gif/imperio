@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffcc;font-family:monospace">
+
+<h1>💀 ADMIN</h1>
+
+{% for u,data in usuarios.items() %}
+{{u}} - {{data.plan}}
+<a href="/ban/{{u}}">🚫 Ban</a><br>
+{% endfor %}
+
+</body>
+</html>

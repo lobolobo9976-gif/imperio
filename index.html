@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:#00ffe1">
+
+<h1>🔥 IMPERIO PRO 🔥</h1>
+
+<div>
+👤 {{user}} | 💎 {{plan}}<br>
+⚡ {{uso}} / {{limite}}<br>
+⏳ {{restante}} días restantes
+</div>
+
+<hr>
+
+<form action="/descargar" method="POST">
+<input name="url" placeholder="URL">
+<button>DESCARGAR</button>
+</form>
+
+<hr>
+
+<h3>📂 Archivos</h3>
+{% for f in archivos %}
+<a href="/ver/{{f}}">{{f}}</a> 
+<a href="/borrar/{{f}}">❌</a><br>
+{% endfor %}
+
+<hr>
+
+<form action="/activar" method="POST">
+<input name="codigo" placeholder="Código VIP">
+<button>Activar</button>
+</form>
+
+<hr>
+
+🔥 DÍAS<br>
+1 día → 0.20€<br>
+7 días → 1.50€<br>
+
+🔥 MESES<br>
+1 mes → 2€<br>
+3 meses → 5€<br>
+12 meses → 10€<br>
+
+🔥 AÑOS<br>
+1 año → 10€<br>
+
+💀 INFINITO ♾️ → 100€<br><br>
+
+<a href="mailto:lobolobo9977@gmail.com">
+<button>Comprar 🛒</button>
+</a>
+
+<hr>
+
+<a href="/admin">⚙️ Panel Admin</a>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {background:black;color:#00ffe1}
+.box {border:1px solid #00ffe1;padding:10px;margin:10px}
+button {background:#00ffe1;padding:10px}
+</style>
+</head>
+<body>
+
+<h1>🔥 IMPERIO PRO 🔥</h1>
+
+<div class="box">
+👤 {{user}} | 💎 {{plan}}<br>
+⚡ {{uso}} / {{limite}}
+</div>
+
+<div class="box">
+<form action="/descargar" method="POST">
+<input name="url" placeholder="URL">
+<button>DESCARGAR</button>
+</form>
+</div>
+
+<div class="box">
+<h3>📂 Archivos</h3>
+{% for f in archivos %}
+<a href="/ver/{{f}}">{{f}}</a> 
+<a href="/borrar/{{f}}">❌</a><br>
+{% endfor %}
+</div>
+
+<div class="box">
+<form action="/activar" method="POST">
+<input name="codigo" placeholder="Código VIP">
+<button>Activar</button>
+</form>
+</div>
+
+<div class="box">
+🔥 1 Mes → 2€<br>
+🔥 Lifetime → 100€<br><br>
+
+<a href="mailto:lobolobo9977@gmail.com">
+<button>Comprar 🛒</button>
+</a>
+</div>
+
+<div class="box">
+<a href="/admin">⚙️ Panel Admin</a>
+</div>
+
+</body>
+</html>
