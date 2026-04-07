@@ -1,47 +1,41 @@
-<!DOCTYPE html>
-<html>
-<body style="background:black;color:#00ffcc;text-align:center">
+<h1>🔥 IMPERIO</h1>
 
-<h1>🔥 IMPERIO 💀</h1>
-
-👤 {{user}}<br>
-💰 {{coins}} coins<br>
-🎯 Nivel {{level}}<br>
-XP {{xp}} / {{need}}<br>
-💎 VIP: {{vip}} seg
-
-<hr>
+{{user}} | 💰 {{coins}} | 🎯 {{level}} | XP {{xp}}/{{need}}
 
 <form action="/download" method="post">
-<input name="url" placeholder="URL YouTube"><br><br>
+<input name="url1"><br>
+<input name="url2"><br>
+<input name="url3"><br>
+<input name="url4"><br>
+<input name="url5"><br>
+<input name="url6"><br><br>
+
 <button>DESCARGAR</button>
 </form>
 
-<hr>
-
-<a href="/spin"><button>🎰 Casino</button></a>
-
-<hr>
+<br>
+<a href="/missions">🎯 Misiones</a><br>
+<a href="/casino">🎰 Casino</a><br>
+<a href="/chest">🎁 Cofre</a><br>
+<a href="/chat">💬 Chat</a><br>
 
 <h3>VIP</h3>
+<a href="/buy_vip/dia">1 Día</a>
+<a href="/buy_vip/mes">1 Mes</a>
+<a href="/buy_vip/inf">∞</a>
 
-<a href="/buy/vip_dia"><button>1 Día</button></a>
-<a href="/buy/vip_mes"><button>1 Mes</button></a>
-<a href="/buy/vip_inf"><button>∞</button></a>
-
-<hr>
-
-<form action="/redeem" method="post">
-<input name="code" placeholder="Código VIP">
+<form action="/use_code" method="post">
+<input name="code">
 <button>Canjear</button>
 </form>
 
-<hr>
-
-<a href="/admin_codes"><button>Admin códigos</button></a>
-
-<br><br>
+<a href="/gen_code">Generar código</a><br>
+<a href="/admin">Admin</a><br>
 <a href="/logout">Salir</a>
 
-</body>
-</html>
+<br><br>
+
+<!-- PAYPAL -->
+<a href="https://www.paypal.com/donate/?hosted_button_id=QSA278KTS7XMN">
+💳 Comprar coins
+</a>

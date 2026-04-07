@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html>
-<body style="background:black;color:#00ffcc;font-family:monospace">
+<h2>ADMIN</h2>
 
-<h1>💀 ADMIN</h1>
+<form method="post">
+<input name="user">
+<input name="coins">
+<button>Dar coins</button>
+</form>
 
-{% for u,data in usuarios.items() %}
-{{u}} - {{data.plan}}
-<a href="/ban/{{u}}">🚫 Ban</a><br>
-{% endfor %}
-
-</body>
-</html>
+<a href="/home">Volver</a>
