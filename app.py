@@ -1,196 +1,73 @@
-from flask import Flask, request, redirect, render_template, session
-import json, os, time, random, requests
+from flask import Flask, render_template, request, redirect, url_for, session
+import time
 
 app = Flask(__name__)
-app.secret_key = "imperio"
+app.secret_key = "imperio_pro"
 
-DB = "db.json"
-DOWNLOADS = {}
-CHAT = []
+usuarios = {}
 
-# ---------------- BASE ----------------
+def get_user():
+    user = session.get("user", "demon")
+    if user not in usuarios:
+        usuarios[user] = {
+            "coins": 50,
+            "xp": 0,
+            "nivel": 1,
+            "vip": 0
+        }
+    return usuarios[user]
 
-def load():
-    try:
-        return json.load(open(DB))
-    except:
-        return {"users": {}}
+@app.route("/")
+def index():
+    user = get_user()
+    return render_template("index.html", user=user)
 
-def save(db):
-    json.dump(db, open(DB, "w"), indent=2)
+@app.route("/descargar", methods=["POST"])
+def descargar():
+    user = get_user()
+    url = request.form.get("url")
 
-def now():
-    return int(time.time())
+    if url:
+        user["coins"] += 5
+        user["xp"] += 10
 
-def xp_need(lvl):
-    return 40 + lvl * 20
+    return redirect(url_for("index"))
 
-def generar_misiones():
-    base = [
-        {"name":"Descargar","coins":5,"xp":10},
-        {"name":"Ganar coins","coins":10,"xp":20},
-        {"name":"Abrir cofre","coins":8,"xp":15},
-        {"name":"Chat","coins":3,"xp":5},
-        {"name":"Subir nivel","coins":15,"xp":30}
+@app.route("/misiones")
+def misiones():
+    user = get_user()
+
+    misiones = [
+        {"nombre": "Descargar", "reward": 10},
+        {"nombre": "Ganar XP", "reward": 15},
+        {"nombre": "Usar web", "reward": 5}
     ]
-    return base
 
-# ---------------- LOGIN ----------------
+    return render_template("misiones.html", misiones=misiones, user=user)
 
-@app.route("/", methods=["GET","POST"])
-def login():
-    db = load()
+@app.route("/completar/<int:reward>")
+def completar(reward):
+    user = get_user()
+    user["coins"] += reward
+    return redirect(url_for("misiones"))
 
-    if request.method == "POST":
-        u = request.form["user"]
-        p = request.form["pass"]
+@app.route("/vip/<tipo>")
+def vip(tipo):
+    user = get_user()
 
-        if u not in db["users"]:
-            db["users"][u] = {
-                "pass": p,
-                "coins": 20,
-                "xp": 0,
-                "level": 1,
-                "missions": []
-            }
+    if tipo == "dia":
+        user["vip"] = time.time() + 86400
+    elif tipo == "mes":
+        user["vip"] = time.time() + 2592000
 
-        if db["users"][u]["pass"] == p:
-            session["user"] = u
-            save(db)
-            return redirect("/home")
+    return redirect(url_for("index"))
 
-    return render_template("login.html")
-
-# ---------------- HOME ----------------
-
-@app.route("/home")
-def home():
-    db = load()
-    u = db["users"][session["user"]]
-
-    return render_template("index.html",
-        user=session["user"],
-        coins=u["coins"],
-        xp=u["xp"],
-        level=u["level"],
-        need=xp_need(u["level"])
-    )
-
-# ---------------- DESCARGA ----------------
-
-@app.route("/download", methods=["POST"])
-def download():
-    db = load()
-    u = db["users"][session["user"]]
-
-    url = request.form["url"]
-
-    try:
-        r = requests.get(url, stream=True)
-        name = url.split("/")[-1]
-
-        os.makedirs("downloads", exist_ok=True)
-        with open("downloads/"+name, "wb") as f:
-            for chunk in r.iter_content(1024):
-                if chunk:
-                    f.write(chunk)
-
-        u["coins"] += 2
-        u["xp"] += 10
-
-        save(db)
-        return "OK"
-
-    except:
-        return "ERROR"
-
-# ---------------- MISIONES ----------------
-
-@app.route("/missions")
-def missions():
-    db = load()
-    u = db["users"][session["user"]]
-
-    if "missions" not in u or len(u["missions"]) == 0:
-        u["missions"] = generar_misiones()
-
-    html = "<h2>🎯 MISIONES</h2>"
-
-    for i, m in enumerate(u["missions"]):
-        html += f"""
-        <p>{m['name']} 💰{m['coins']} ⭐{m['xp']}
-        <a href='/claim/{i}'>[OK]</a></p>
-        """
-
-    html += "<br><a href='/home'>Volver</a>"
-
-    save(db)
-    return html
-
-@app.route("/claim/<int:i>")
-def claim(i):
-    db = load()
-    u = db["users"][session["user"]]
-
-    if i < len(u["missions"]):
-        m = u["missions"][i]
-        u["coins"] += m["coins"]
-        u["xp"] += m["xp"]
-        u["missions"].pop(i)
-
-    save(db)
-    return redirect("/missions")
-
-# ---------------- COFRE ----------------
-
-@app.route("/chest")
-def chest():
-    db = load()
-    u = db["users"][session["user"]]
-
-    if u["coins"] < 10:
-        return "No coins"
-
-    u["coins"] -= 10
-    premio = random.randint(5, 30)
-
-    u["coins"] += premio
-    save(db)
-
-    return f"🎁 Ganaste {premio} coins <br><a href='/home'>Volver</a>"
-
-# ---------------- CHAT ----------------
+@app.route("/comprar")
+def comprar():
+    return render_template("comprar.html")
 
 @app.route("/chat")
 def chat():
-    html = "<h2>💬 CHAT</h2>"
+    return render_template("chat.html")
 
-    for m in CHAT:
-        html += "<p>"+m+"</p>"
-
-    html += """
-    <form method='post' action='/send'>
-    <input name='msg'>
-    <button>Enviar</button>
-    </form>
-    <a href='/home'>Volver</a>
-    """
-
-    return html
-
-@app.route("/send", methods=["POST"])
-def send():
-    CHAT.append(session["user"]+": "+request.form["msg"])
-    return redirect("/chat")
-
-# ---------------- LOGOUT ----------------
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-# ---------------- RUN ----------------
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+app.run(host="0.0.0.0", port=10000)

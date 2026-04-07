@@ -1,41 +1,63 @@
-<h1>🔥 IMPERIO</h1>
+<!DOCTYPE html>
+<html>
+<head>
+<title>IMPERIO</title>
+<style>
+body {
+    background: black;
+    color: #00ffc3;
+    font-family: Arial;
+    text-align: center;
+}
+input, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+}
+.card {
+    border: 1px solid #00ffc3;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 15px;
+}
+a { color: cyan; }
+</style>
+</head>
+<body>
 
-{{user}} | 💰 {{coins}} | 🎯 {{level}} | XP {{xp}}/{{need}}
+<h1>🔥 IMPERIO 💀</h1>
 
-<form action="/download" method="post">
-<input name="url1"><br>
-<input name="url2"><br>
-<input name="url3"><br>
-<input name="url4"><br>
-<input name="url5"><br>
-<input name="url6"><br><br>
+<div class="card">
+<p>👤 demon</p>
+<p>💰 {{user.coins}} coins</p>
+<p>🎯 Nivel {{user.nivel}}</p>
+<p>XP {{user.xp}}</p>
 
+{% if user.vip > 0 %}
+<p>💎 VIP activo</p>
+{% else %}
+<p>💎 No VIP</p>
+{% endif %}
+</div>
+
+<div class="card">
+<form action="/descargar" method="POST">
+<input name="url" placeholder="URL video">
 <button>DESCARGAR</button>
 </form>
+</div>
 
-<br>
-<a href="/missions">🎯 Misiones</a><br>
-<a href="/casino">🎰 Casino</a><br>
-<a href="/chest">🎁 Cofre</a><br>
+<div class="card">
+<a href="/misiones">🎯 Misiones</a><br>
 <a href="/chat">💬 Chat</a><br>
+<a href="/comprar">💳 Comprar coins</a>
+</div>
 
+<div class="card">
 <h3>VIP</h3>
-<a href="/buy_vip/dia">1 Día</a>
-<a href="/buy_vip/mes">1 Mes</a>
-<a href="/buy_vip/inf">∞</a>
+<a href="/vip/dia">1 Día</a>
+<a href="/vip/mes">1 Mes</a>
+</div>
 
-<form action="/use_code" method="post">
-<input name="code">
-<button>Canjear</button>
-</form>
-
-<a href="/gen_code">Generar código</a><br>
-<a href="/admin">Admin</a><br>
-<a href="/logout">Salir</a>
-
-<br><br>
-
-<!-- PAYPAL -->
-<a href="https://www.paypal.com/donate/?hosted_button_id=QSA278KTS7XMN">
-💳 Comprar coins
-</a>
+</body>
+</html>

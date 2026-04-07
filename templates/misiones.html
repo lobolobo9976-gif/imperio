@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center">
+
+<h1>🎯 MISIONES</h1>
+
+{% for m in misiones %}
+<div style="margin:10px">
+{{m.nombre}} → 💰 {{m.reward}}
+<a href="/completar/{{m.reward}}">[OK]</a>
+</div>
+{% endfor %}
+
+<br>
+<a href="/">⬅ Volver</a>
+
+</body>
+</html>
