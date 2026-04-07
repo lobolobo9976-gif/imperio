@@ -1,73 +1,17 @@
-<style>
-body{background:#000;color:#00ffc8;text-align:center;font-family:monospace;}
-.box{background:#111;padding:20px;margin:20px;border-radius:15px;box-shadow:0 0 15px #00ffc8;}
-button{padding:10px;background:#00ffc8;border:none;border-radius:10px;}
-input{padding:10px;border-radius:10px;border:none;}
-</style>
-
 <h1>🔥 IMPERIO</h1>
 
-<div class="box">
-👤 {{user}}<br>
-💰 {{coins}}<br>
-🎯 {{level}}<br>
-XP {{xp}}/{{need}}<br>
-{{vip}}
-</div>
+{{user}} | 💰 {{coins}} | 🎯 {{level}} | XP {{xp}}/{{need}}
 
-<div class="box">
-<input id="url" placeholder="URL archivo">
-<button onclick="d()">DESCARGAR</button>
-<div style="background:#333;height:20px;">
-<div id="b" style="background:#00ffc8;height:20px;width:0%"></div>
-</div>
-</div>
+<br><br>
 
-<div class="box">
+<form action="/download" method="post">
+<input name="url" placeholder="URL archivo">
+<button>DESCARGAR</button>
+</form>
+
+<br>
+
 <a href="/missions">🎯 Misiones</a><br>
 <a href="/chest">🎁 Cofre</a><br>
-<a href="/chat">💬 Chat</a>
-</div>
-
-<div class="box">
-<h2>VIP</h2>
-<a href="/buy_vip/dia">1 Día</a>
-<a href="/buy_vip/mes">1 Mes</a>
-<a href="/buy_vip/año">1 Año</a>
-<a href="/buy_vip/inf">∞</a>
-
-<form method="post" action="/use">
-<input name="code">
-<button>Canjear</button>
-</form>
-
-<form method="post" action="/gen">
-<select name="tipo">
-<option value="dia">día</option>
-<option value="mes">mes</option>
-<option value="año">año</option>
-<option value="inf">∞</option>
-</select>
-<button>Generar</button>
-</form>
-</div>
-
-<div class="box">
-<a href="/admin">Admin</a><br>
-<a href="/logout">Salir</a><br>
-<a href="https://www.paypal.com/donate/?hosted_button_id=QSA278KTS7XMN">💳 Comprar</a>
-</div>
-
-<script>
-function d(){
- fetch("/download",{method:"POST",
- headers:{"Content-Type":"application/x-www-form-urlencoded"},
- body:"url="+document.getElementById("url").value})
-
- setInterval(async()=>{
-  let r=await fetch("/progress")
-  let p=await r.text()
-  document.getElementById("b").style.width=p+"%"
- },1000)
-}
-</script>
+<a href="/chat">💬 Chat</a><br>
+<a href="/logout">Salir</a>
