@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center">
+
+<h1>CHAT</h1>
+
+<form method="POST">
+<input name="msg">
+<button>Enviar</button>
+</form>
+
+{% for m in chat %}
+<p>{{m}}</p>
+{% endfor %}
+
+<a href="/">Volver</a>
+
+</body>
+</html>

@@ -1,63 +1,33 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>IMPERIO</title>
-<style>
-body {
-    background: black;
-    color: #00ffc3;
-    font-family: Arial;
-    text-align: center;
-}
-input, button {
-    padding: 10px;
-    margin: 5px;
-    border-radius: 10px;
-}
-.card {
-    border: 1px solid #00ffc3;
-    padding: 15px;
-    margin: 10px;
-    border-radius: 15px;
-}
-a { color: cyan; }
-</style>
-</head>
-<body>
+<body style="background:black;color:#00ffc3;text-align:center">
 
 <h1>🔥 IMPERIO 💀</h1>
 
-<div class="card">
-<p>👤 demon</p>
-<p>💰 {{user.coins}} coins</p>
+<p>💰 {{user.coins}}</p>
 <p>🎯 Nivel {{user.nivel}}</p>
-<p>XP {{user.xp}}</p>
 
-{% if user.vip > 0 %}
-<p>💎 VIP activo</p>
+<!-- BARRA XP -->
+<div style="width:80%;background:#222;margin:auto;border-radius:10px">
+<div style="width:{{(user.xp/(user.nivel*50))*100}}%;background:#00ffc3;height:10px"></div>
+</div>
+
+{% if user.vip > time %}
+<p>💎 VIP activo ({{ (user.vip - time)//60 }} min)</p>
 {% else %}
 <p>💎 No VIP</p>
 {% endif %}
-</div>
 
-<div class="card">
-<form action="/descargar" method="POST">
-<input name="url" placeholder="URL video">
-<button>DESCARGAR</button>
-</form>
-</div>
+<br>
 
-<div class="card">
 <a href="/misiones">🎯 Misiones</a><br>
 <a href="/chat">💬 Chat</a><br>
-<a href="/comprar">💳 Comprar coins</a>
-</div>
+<a href="/admin">⚙ Admin</a><br>
+<a href="/logout">Salir</a>
 
-<div class="card">
 <h3>VIP</h3>
-<a href="/vip/dia">1 Día</a>
-<a href="/vip/mes">1 Mes</a>
-</div>
+<a href="/vip/dia">1 Día (50 coins)</a>
+<a href="/vip/mes">1 Mes (200 coins)</a>
 
 </body>
 </html>
