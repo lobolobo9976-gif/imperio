@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<body style="background:black;color:#00ffcc;text-align:center">
-
-<h1>🔥 IMPERIO 💀</h1>
+<h1>🔥 IMPERIO</h1>
 
 {{user}} | 💰 {{coins}} | 🎯 {{level}} | XP {{xp}}/{{need}}
 
-<form id="f">
+<form action="/download" method="post">
 <input name="url1"><br>
 <input name="url2"><br>
 <input name="url3"><br>
@@ -14,36 +10,32 @@
 <input name="url5"><br>
 <input name="url6"><br><br>
 
-<button type="button" onclick="start()">DESCARGAR</button>
+<button>DESCARGAR</button>
 </form>
 
-<div id="progress"></div>
-
-<script>
-async function start(){
- let f=new FormData(document.getElementById("f"))
- let r=await fetch("/download",{method:"POST",body:f})
- let ids=await r.json()
-
- ids.forEach(id=>{
-  let el=document.createElement("div")
-  document.body.appendChild(el)
-
-  setInterval(async ()=>{
-   let p=await fetch("/progress/"+id)
-   let d=await p.json()
-   el.innerHTML=id+" "+d.progress
-  },1000)
- })
-}
-</script>
-
 <br>
+<a href="/missions">🎯 Misiones</a><br>
 <a href="/casino">🎰 Casino</a><br>
-<a href="/shop">🛒 Tienda</a><br>
 <a href="/chest">🎁 Cofre</a><br>
-<a href="/admin">⚙️ Admin</a><br>
+<a href="/chat">💬 Chat</a><br>
+
+<h3>VIP</h3>
+<a href="/buy_vip/dia">1 Día</a>
+<a href="/buy_vip/mes">1 Mes</a>
+<a href="/buy_vip/inf">∞</a>
+
+<form action="/use_code" method="post">
+<input name="code">
+<button>Canjear</button>
+</form>
+
+<a href="/gen_code">Generar código</a><br>
+<a href="/admin">Admin</a><br>
 <a href="/logout">Salir</a>
 
-</body>
-</html>
+<br><br>
+
+<!-- PAYPAL -->
+<a href="https://www.paypal.com/donate/?hosted_button_id=QSA278KTS7XMN">
+💳 Comprar coins
+</a>

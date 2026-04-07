@@ -1,17 +1,11 @@
 from flask import Flask, request, redirect, render_template, session, jsonify
-import os, json, time, random, string, threading
-import yt_dlp
+import os, json, time, random, string
 
 app = Flask(__name__)
-app.secret_key = "imperio_full"
+app.secret_key = "imperio_dios"
 
 DB = "db.json"
 CODES = "codes.json"
-DOWNLOAD_FOLDER = "downloads"
-os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
-
-queue = []
-progress_data = {}
 
 def load():
     try:
@@ -22,41 +16,22 @@ def load():
 def save(data):
     json.dump(data, open(DB, "w"), indent=2)
 
+def load_codes():
+    try:
+        return json.load(open(CODES))
+    except:
+        return {}
+
+def save_codes(data):
+    json.dump(data, open(CODES, "w"), indent=2)
+
 def now():
     return int(time.time())
 
 def xp_needed(level):
     return 40 + level*20
 
-# -------- WORKER DESCARGA --------
-def worker():
-    while True:
-        if queue:
-            task = queue.pop(0)
-            url = task["url"]
-            pid = task["id"]
-
-            try:
-                ydl_opts = {
-                    'outtmpl': DOWNLOAD_FOLDER + "/%(title)s.%(ext)s",
-                    'format': 'mp4',
-                    'quiet': True,
-                    'progress_hooks': [task["hook"]]
-                }
-
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([url])
-
-                progress_data[pid]["status"] = "done"
-
-            except:
-                progress_data[pid]["status"] = "error"
-
-        time.sleep(1)
-
-threading.Thread(target=worker, daemon=True).start()
-
-# -------- LOGIN --------
+# LOGIN
 @app.route("/", methods=["GET","POST"])
 def login():
     db = load()
@@ -81,7 +56,7 @@ def login():
 
     return render_template("login.html")
 
-# -------- HOME --------
+# HOME
 @app.route("/home")
 def home():
     db = load()
@@ -95,7 +70,7 @@ def home():
         need=xp_needed(u["level"])
     )
 
-# -------- DESCARGA --------
+# DESCARGA (SIMULADA FUNCIONAL)
 @app.route("/download", methods=["POST"])
 def download():
     db = load()
@@ -104,36 +79,21 @@ def download():
     urls = [request.form.get(f"url{i}") for i in range(1,7)]
     urls = [x for x in urls if x]
 
-    ids = []
+    if not urls:
+        return "No URL"
 
-    for url in urls:
-        pid = str(time.time()) + str(random.randint(1,999))
-        progress_data[pid] = {"progress":"0%","status":"downloading"}
-
-        def hook(d, pid=pid):
-            if d['status'] == 'downloading':
-                progress_data[pid]["progress"] = d.get('_percent_str',"0%")
-            if d['status'] == 'finished':
-                progress_data[pid]["progress"] = "100%"
-
-        queue.append({"url":url,"hook":hook,"id":pid})
-        ids.append(pid)
-
-    u["xp"] += len(ids)*10
-    u["coins"] += len(ids)
+    u["coins"] -= 1
+    u["xp"] += 10 * len(urls)
 
     if u["xp"] >= xp_needed(u["level"]):
         u["xp"] = 0
         u["level"] += 1
 
     save(db)
-    return jsonify(ids)
 
-@app.route("/progress/<pid>")
-def progress(pid):
-    return jsonify(progress_data.get(pid,{}))
+    return "Descargando OK"
 
-# -------- CASINO --------
+# CASINO
 @app.route("/casino")
 def casino():
     return render_template("casino.html")
@@ -149,36 +109,12 @@ def spin():
     u["coins"] -= 5
     r = random.choice([0,2,5,10,20])
 
-    if r > 0:
-        u["coins"] += r
-
+    u["coins"] += r
     save(db)
-    return str(r)
 
-# -------- TIENDA --------
-@app.route("/shop")
-def shop():
-    db = load()
-    return render_template("shop.html", coins=db["users"][session["user"]]["coins"])
+    return f"Ganaste {r}"
 
-@app.route("/buy_vip/<tipo>")
-def buy_vip(tipo):
-    db = load()
-    u = db["users"][session["user"]]
-
-    precios = {"dia":50,"mes":200,"inf":1000}
-    tiempos = {"dia":86400,"mes":2592000,"inf":9999999999}
-
-    if u["coins"] < precios[tipo]:
-        return "No coins"
-
-    u["coins"] -= precios[tipo]
-    u["vip"] = now() + tiempos[tipo]
-
-    save(db)
-    return redirect("/home")
-
-# -------- COFRES --------
+# COFRE
 @app.route("/chest")
 def chest():
     db = load()
@@ -188,22 +124,76 @@ def chest():
         return "No coins"
 
     u["coins"] -= 10
+    premio = random.choice([5,10,20,50])
 
-    premio = random.choice(["coins","xp","vip"])
+    u["coins"] += premio
+    save(db)
 
-    if premio == "coins":
-        u["coins"] += random.randint(5,20)
+    return redirect("/home")
 
-    elif premio == "xp":
-        u["xp"] += 20
+# MISIONES
+@app.route("/missions")
+def missions():
+    db = load()
+    u = db["users"][session["user"]]
 
-    elif premio == "vip":
-        u["vip"] = now() + 60
+    u["coins"] += 2
+    u["xp"] += 10
 
     save(db)
     return redirect("/home")
 
-# -------- ADMIN --------
+# VIP
+@app.route("/buy_vip/<tipo>")
+def buy_vip(tipo):
+    db = load()
+    u = db["users"][session["user"]]
+
+    precios = {"dia":50,"mes":200,"inf":1000}
+    tiempo = {"dia":86400,"mes":2592000,"inf":999999999}
+
+    if u["coins"] < precios[tipo]:
+        return "No coins"
+
+    u["coins"] -= precios[tipo]
+    u["vip"] = now() + tiempo[tipo]
+
+    save(db)
+    return redirect("/home")
+
+# GENERAR CÓDIGOS
+@app.route("/gen_code")
+def gen_code():
+    if session.get("user") != "demon":
+        return "No admin"
+
+    codes = load_codes()
+    code = ''.join(random.choices(string.ascii_uppercase+string.digits, k=8))
+
+    codes[code] = 100
+    save_codes(codes)
+
+    return code
+
+# USAR CÓDIGOS
+@app.route("/use_code", methods=["POST"])
+def use_code():
+    codes = load_codes()
+    db = load()
+    u = db["users"][session["user"]]
+
+    code = request.form["code"]
+
+    if code in codes:
+        u["coins"] += codes[code]
+        del codes[code]
+
+    save(db)
+    save_codes(codes)
+
+    return redirect("/home")
+
+# ADMIN
 @app.route("/admin", methods=["GET","POST"])
 def admin():
     if session.get("user") != "demon":
@@ -221,9 +211,21 @@ def admin():
     save(db)
     return render_template("admin.html", users=db["users"])
 
+# CHAT SIMPLE
+CHAT = []
+
+@app.route("/chat")
+def chat():
+    return render_template("chat.html", msgs=CHAT)
+
+@app.route("/send", methods=["POST"])
+def send():
+    CHAT.append(session["user"] + ": " + request.form["msg"])
+    return redirect("/chat")
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+app.run(host="0.0.0.0", port=5000)
